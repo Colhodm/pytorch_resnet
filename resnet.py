@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import GN_w_BN as gnbn
 
 def initialize_weights(module):
     if isinstance(module, nn.Conv2d):
@@ -52,7 +52,7 @@ class BasicBlock(nn.Module):
             self.shortcut.add_module('bn', nn.BatchNorm2d(out_channels))  # BN
 
     def forward(self, x):
-        y = F.relu(self.bn1(self.conv1(x)), inplace=True)
+        y = F.relu(gnbn.GN_w_BN_f(self.conv1(x),5), inplace=True)
         y = self.bn2(self.conv2(y))
         y += self.shortcut(x)
         y = F.relu(y, inplace=True)  # apply ReLU after addition
@@ -108,9 +108,9 @@ class BottleneckBlock(nn.Module):
             self.shortcut.add_module('bn', nn.BatchNorm2d(out_channels))  # BN
 
     def forward(self, x):
-        y = F.relu(self.bn1(self.conv1(x)), inplace=True)
-        y = F.relu(self.bn2(self.conv2(y)), inplace=True)
-        y = self.bn3(self.conv3(y))  # not apply ReLU
+        y = F.relu(gnbn.GN_w_BN_f(self.conv1(x),5), inplace=True)
+        y = F.relu(gnbn.GN_w_BN_f(self.conv2(y),5), inplace=True)
+        y = self.gnbn.GN_w_BN_f(self.conv3(y),5)  # not apply ReLU
         y += self.shortcut(x)
         y = F.relu(y, inplace=True)  # apply ReLU after addition
         return y
@@ -182,7 +182,7 @@ class Network(nn.Module):
         return stage
 
     def _forward_conv(self, x):
-        x = F.relu(self.bn(self.conv(x)), inplace=True)
+        x = F.relu(gnbn.GN_w_BN_f(self.conv(x),5), inplace=True)
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)
