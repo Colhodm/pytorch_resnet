@@ -31,6 +31,7 @@ import matplotlib.image as mpimg
 
 
 def GN_w_BN_f(x, G, eps=1e-5, flag=True):
+    rem_grad = x.grad
     x_np = x.detach().numpy()
     #x_np = x
     Nabs, C, H, W = x_np.shape
@@ -85,7 +86,9 @@ def GN_w_BN_f(x, G, eps=1e-5, flag=True):
                         tmpp = tmppp[j*H*W:(j+1)*H*W]
                         res_x_tmp[j, idxx[0], :, :] = np.reshape(tmpp, (H, W))
             res_x[ii, :, :, :] = res_x_tmp
-    return torch.from_numpy(res_x).double()
+    Res_x = torch.from_numpy(res_x)
+    Res_x.grad = rem_grad
+    return Res_x
 
 
 
