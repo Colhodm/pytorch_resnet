@@ -31,7 +31,10 @@ import matplotlib.image as mpimg
 
 
 def GN_w_BN_f(x, G, eps=1e-5, flag=True):
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
     rem_grad = x.grad
+    x = x.cpu()
     x_np = x.detach().numpy()
     #x_np = x
     Nabs, C, H, W = x_np.shape
@@ -88,6 +91,7 @@ def GN_w_BN_f(x, G, eps=1e-5, flag=True):
             res_x[ii, :, :, :] = res_x_tmp
     Res_x = torch.from_numpy(res_x)
     Res_x.grad = rem_grad
+    Res_x = Res_x.to(device)
     return Res_x
 
 
