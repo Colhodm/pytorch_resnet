@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import GN_w_BN as gnbn
+import HoogiNorm as HN
 
 def initialize_weights(module):
     if isinstance(module, nn.Conv2d):
@@ -52,7 +53,10 @@ class BasicBlock(nn.Module):
             self.shortcut.add_module('bn', nn.BatchNorm2d(out_channels))  # BN
 
     def forward(self, x):
-        y = F.relu(gnbn.GN_w_BN_f(self.conv1(x),5), inplace=True)
+        ####### Avishay #############
+        m1 = HN.HoogiNorm(self.conv1(x).shape[1], 5)
+        y = F.relu(m1(self.conv1(x)), inplace=True)
+        #############################
         y = self.bn2(self.conv2(y))
         y += self.shortcut(x)
         y = F.relu(y, inplace=True)  # apply ReLU after addition
@@ -108,9 +112,14 @@ class BottleneckBlock(nn.Module):
             self.shortcut.add_module('bn', nn.BatchNorm2d(out_channels))  # BN
 
     def forward(self, x):
-        y = F.relu(gnbn.GN_w_BN_f(self.conv1(x),5), inplace=True)
-        y = F.relu(gnbn.GN_w_BN_f(self.conv2(y),5), inplace=True)
-        y = self.gnbn.GN_w_BN_f(self.conv3(y),5)  # not apply ReLU
+        ####### Avishay #######
+        m1 = HN.HoogiNorm(self.conv1(x).shape[1], 5)
+        y = F.relu(m(self.conv1(x)), inplace=True)
+        m2 = HN.HoogiNorm(self.conv2(y).shape[1], 5)
+        y = F.relu(m2(self.conv2(y)), inplace=True)
+        m3 = HN.HoogiNorm(self.conv3(y).shape[1], 5)
+        y = self.m3(self.conv3(y))  # not apply ReLU
+        ########################
         y += self.shortcut(x)
         y = F.relu(y, inplace=True)  # apply ReLU after addition
         return y
@@ -182,7 +191,12 @@ class Network(nn.Module):
         return stage
 
     def _forward_conv(self, x):
-        x = F.relu(gnbn.GN_w_BN_f(self.conv(x),5), inplace=True)
+        #### Avishay #####
+        print(x)
+        print(torch.mean(x))
+        m = HN.HoogiNorm(self.conv(x).shape[1], 5)
+        x = F.relu(m(self.conv(x)), inplace=True)
+        ##################
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)
