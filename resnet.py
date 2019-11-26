@@ -192,8 +192,6 @@ class Network(nn.Module):
 
     def _forward_conv(self, x):
         #### Avishay #####
-        print(x)
-        print(torch.mean(x))
         m = HN.HoogiNorm(self.conv(x).shape[1], 5)
         x = F.relu(m(self.conv(x)), inplace=True)
         ##################
