@@ -305,9 +305,6 @@ def main():
         optimizer,
         milestones=optim_config['milestones'],
         gamma=optim_config['lr_decay'])
-
-    # run test before start training
-    test(0, model, criterion, test_loader, run_config, writer)
     temp =1
     if os.path.exists(os.path.join(outdir, 'model_state.pth')):
         checkpoint = torch.load(os.path.join(outdir, 'model_state.pth'))
@@ -317,6 +314,9 @@ def main():
         temp = epoch
         loss = checkpoint['loss']
         model.eval()
+    else:
+        test(0, model, criterion, test_loader, run_config, writer)
+
     for epoch in range(temp, optim_config['epochs'] + 1):
         scheduler.step()
 
