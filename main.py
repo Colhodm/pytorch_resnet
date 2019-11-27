@@ -308,8 +308,16 @@ def main():
 
     # run test before start training
     test(0, model, criterion, test_loader, run_config, writer)
-
-    for epoch in range(1, optim_config['epochs'] + 1):
+    temp =1
+    if os.path.exists(os.path.join(outdir, 'model_state.pth')):
+        checkpoint = torch.load(os.path.join(outdir, 'model_state.pth'))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch = checkpoint['epoch']
+        temp = epoch
+        loss = checkpoint['loss']
+        model.eval()
+    for epoch in range(temp, optim_config['epochs'] + 1):
         scheduler.step()
 
         train(epoch, model, optimizer, criterion, train_loader, run_config,
