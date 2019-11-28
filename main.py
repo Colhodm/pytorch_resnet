@@ -313,7 +313,6 @@ def main():
         epoch = checkpoint['epoch']
         temp = epoch
         loss = checkpoint['loss']
-        model.eval()
     else:
         test(0, model, criterion, test_loader, run_config, writer)
 
