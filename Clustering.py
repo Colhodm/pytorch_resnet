@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans
 
 
 def data_preparation(n_cluster, data):
-    kmeans = KMeans(n_clusters=n_cluster, init='k-means++', max_iter=300, n_init=10, random_state=0)
+    kmeans = KMeans(n_clusters=n_cluster, init='k-means++', max_iter=300, n_init=10, random_state=0,n_jobs=-1)
     pred = kmeans.fit_predict(data)
 
     return kmeans
