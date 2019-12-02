@@ -330,7 +330,7 @@ def main():
             ('epoch', epoch),
             ('accuracy', accuracy),
         ])
-        model_path = os.path.join(outdir, 'model_state.pth')
+        model_path = os.path.join(outdir, 'model_state_{}.pth'.format(epoch))
         torch.save(state, model_path)
 
     if run_config['tensorboard']:

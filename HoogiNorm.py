@@ -86,7 +86,27 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                         input_mod[:, d + count, :, :] = input[:, idxx[0], :, :]
             #count += len(inx)
             count += Common_mul'''
-        tmp1 = np.zeros(())
+        tmp1 = torch.zeros(())
+        for val in range(G):
+            inx = np.argwhere(Data.labels_ == val)
+            if (len(np.argwhere(Data.labels_ == val)) > 0):
+                tmp = torch.zeros((input.shape[0], len(np.argwhere(Data.labels_ == val)), input.shape[2], input.shape[3]))
+            for idx, idxx in enumerate(inx):
+                if (len(np.argwhere(Data.labels_ == val)) == 0):
+                    pass
+                else:
+                    # for d in range(int(Common / len(np.argwhere(Data.labels_ == val)))):
+                    # for d in range(Common_mul):
+                    tmp[:, idx, :, :] = input[:, idxx[0], :, :]
+            out_final_tmp = (Stat_torch(tmp)).float().to('cuda')
+            for idx, idxx in enumerate(inx):
+                if (len(np.argwhere(Data.labels_ == val)) == 0):
+                    pass
+                else:
+                    # for d in range(int(Common / len(np.argwhere(Data.labels_ == val)))):
+                    # for d in range(Common_mul):
+                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]
+        '''tmp1 = np.zeros(())
         for val in range(G):
             inx = np.argwhere(Data.labels_ == val)
             if (len(np.argwhere(Data.labels_ == val)) > 0):
@@ -105,7 +125,7 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                 else:
                     # for d in range(int(Common / len(np.argwhere(Data.labels_ == val)))):
                     # for d in range(Common_mul):
-                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]
+                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]'''
 
             # count += Common_mul
         # input_reshaped = input_mod.contiguous().view(1, int(b * (Common_mul * Common_add)/group), group, *input.size()[2:])
@@ -184,5 +204,34 @@ def Stat(IN):
     for i in range(IN.shape[0]):
         for j in range(IN.shape[1]):
             out[i, j, :, :] = (1 / sigma[i]) * (IN[i, j, :, :] - mu[i])
+    return out
+
+
+def Stat_torch(IN):
+    tmp = torch.zeros((IN.shape[0]))
+    tmp2 = 0
+    eps = 1e-5
+    sigma = torch.zeros((IN.shape[0], 1))
+    out = IN
+    # print('IN is:')
+    # print(IN.shape)
+    '''for i in range(IN.shape[1]):
+        tmp += np.sum(IN[:,i,:,:])'''
+    res = torch.zeros((IN.shape[0], 2, IN.shape[2], IN.shape[3]))
+    res[:, 0, :, :], res[:, 1, :, :] = torch.std_mean(IN, dim=1)
+    #sigma = torch.std
+    #for i in range(IN.shape[0]):
+        # for j in range(IN.shape[1]):
+        
+
+    # tmp = np.sum(IN, where=[False, True, True, True])
+    #mu = (1 / (IN.shape[1] * IN.shape[2] * IN.shape[3])) * tmp
+    '''for i in range(IN.shape[0]):
+        sigma[i] = np.sqrt(
+            (1 / (IN.shape[1] * IN.shape[2] * IN.shape[3])) * (np.sum((IN[i, :, :, :] - mu[i]) ** 2) + eps))'''
+    # sigma = np.sqrt((1 / (IN.shape[0] * IN.shape[2] * IN.shape[3])) * tmp2)
+    for i in range(IN.shape[0]):
+        for j in range(IN.shape[1]):
+            out[i, j, :, :] = (1 / res[i, 0]) * (IN[i, j, :, :] - res[i, 1])
     return out
 
