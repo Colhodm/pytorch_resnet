@@ -86,13 +86,15 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                         input_mod[:, d + count, :, :] = input[:, idxx[0], :, :]
             #count += len(inx)
             count += Common_mul'''
+        #TODO new fix for the new API
+        clusters = Data.get_clusters()
         tmp1 = torch.zeros(())
-        for val in range(G):
-            inx = np.argwhere(Data.labels_ == val)
-            if (len(np.argwhere(Data.labels_ == val)) > 0):
-                tmp = torch.zeros((input.shape[0], len(np.argwhere(Data.labels_ == val)), input.shape[2], input.shape[3]))
+        for cluster in clusters:
+            inx = cluster
+            if (len(inx) > 0):
+                tmp = torch.zeros((input.shape[0], len(inx), input.shape[2], input.shape[3]))
             for idx, idxx in enumerate(inx):
-                if (len(np.argwhere(Data.labels_ == val)) == 0):
+                if len(inx) == 0:
                     pass
                 else:
                     # for d in range(int(Common / len(np.argwhere(Data.labels_ == val)))):
@@ -100,7 +102,7 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                     tmp[:, idx, :, :] = input[:, idxx[0], :, :]
             out_final_tmp = (Stat_torch(tmp)).float().to('cuda')
             for idx, idxx in enumerate(inx):
-                if (len(np.argwhere(Data.labels_ == val)) == 0):
+                if (len(inx) == 0):
                     pass
                 else:
                     # for d in range(int(Common / len(np.argwhere(Data.labels_ == val)))):
@@ -222,7 +224,7 @@ def Stat_torch(IN):
     #sigma = torch.std
     #for i in range(IN.shape[0]):
         # for j in range(IN.shape[1]):
-        
+
 
     # tmp = np.sum(IN, where=[False, True, True, True])
     #mu = (1 / (IN.shape[1] * IN.shape[2] * IN.shape[3])) * tmp
