@@ -96,7 +96,7 @@ def parse_args():
     ])
 
     data_config = OrderedDict([
-        ('dataset', 'CIFAR10'),
+        ('dataset', 'CIFAR100'),
     ])
 
     run_config = OrderedDict([
