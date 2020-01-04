@@ -81,7 +81,7 @@ def parse_args():
         ('depth', args.depth),
         ('base_channels', args.base_channels),
         ('input_shape', (1, 3, 32, 32)),
-        ('n_classes', 10),
+        ('n_classes', 100),
     ])
 
     optim_config = OrderedDict([
