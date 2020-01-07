@@ -44,6 +44,7 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         # Apply instance norm
         # input_reshaped_1 = input.contiguous().view(1, int(b * c/group), group, *input.size()[2:])
         # input_reshaped = input_reshaped_1
+        eps = 1e-5
         G = group
         input_mod = input
         out_final = input
@@ -218,7 +219,7 @@ def Stat_torch(IN):
     '''for i in range(IN.shape[1]):
         tmp += np.sum(IN[:,i,:,:])'''
     res = torch.zeros((IN.shape[0], 2, IN.shape[2], IN.shape[3]))
-    res[:, 0, :, :], res[:, 1, :, :] = torch.std_mean(IN, dim=1)
+    res[:, 0, :, :], res[:, 1, :, :] = torch.std_mean(IN + eps, dim=1)
     #sigma = torch.std
     #for i in range(IN.shape[0]):
         # for j in range(IN.shape[1]):
