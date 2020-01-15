@@ -45,6 +45,7 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         input_cpu = input.to('cpu')
         x = input_cpu.to('cpu')
         x_np = x.detach().numpy()
+        x_np = np.nan_to_num(x_np)
         # At this point we have just stored our input on CPU with Numpy
         print(33333,x_np,x_np.shape)
         Nabs, C, H, W = x_np.shape
@@ -77,7 +78,6 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                 if len(inx) == 0:
                     pass
                 else:
-                    print(idx,idxx)
                     # This is line of code is effectively saying fill into our temp channel equal to
                     # the original index from input for all the matching indices. so we have temp has 
                     # number of channels assigned to that cluster
@@ -123,7 +123,6 @@ class HoogiNorm(_BatchNorm):
 
 # Deprecated Method of Normalization
 def Stat(IN):
-    print('I AM WORKING UP TO HERE')
     tmp = np.zeros((IN.shape[0]))
     tmp2 = 0
     eps = 1e-5
@@ -151,6 +150,7 @@ def Stat(IN):
 
 # Current Method of Normalization
 def Stat_torch(IN):
+    print('I AM WORKING UP TO HERE')
     tmp = torch.zeros((IN.shape[0]))
     tmp2 = 0
     eps = 1e-5
