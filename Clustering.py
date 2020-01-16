@@ -1,15 +1,13 @@
 import numpy as np
 #import pandas as pd
 #from matplotlib import pyplot as plt
-from sklearn.datasets.samples_generator import make_blobs
-from sklearn.cluster import KMeans
-
+import sys
+sys.path.append('./kmeans_pytorch')
+from kmeans_pytorch.kmeans import lloyd
 
 def data_preparation(n_cluster, data):
-    kmeans = KMeans(n_clusters=n_cluster, init='k-means++', max_iter=300, n_init=10, random_state=0,n_jobs=-1)
-    pred = kmeans.fit_predict(data)
-
-    return kmeans
+    clusters_index, centers = lloyd(data, n_cluster, device=0, tol=1e-1)
+    return clusters_index
 
 
 

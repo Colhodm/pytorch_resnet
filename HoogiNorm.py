@@ -55,12 +55,11 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         # this is a looser form where we are just by channel dimensions
         x_np_new = np.zeros((C,2))
         # we loop through the channels
-        for i in range(C):
-            # we are converting the raw input data such that there are channel rows of large N*H*W blocks
-            # why
-           temp = np.reshape(x_np[:, i, :, :], (1, N * H * W))
-           x_np_new[i, :] = [temp.mean(),temp.std()]        # 60 by 10000 trying to cluster in this basis
-        # we create a copy of our reformatted data
+        #TODO DOUBLE CHECK THIS IS RIGHT!!!
+        temp = np.reshape(x_np[:, :, :, :], (C, N * H * W))
+        mean,std = np.reshape(np.mean(temp,axis=(1)),(C,1)) ,np.reshape(np.std(temp,axis=(1)),(C,1))
+        # we might need hstack
+        x_np_new[:,:] = np.hstack((std, mean))
         x_np_new = np.nan_to_num(x_np_new,posinf=0,neginf=0)
         image_vector = np.asarray(x_np_new)
         Data = data_preparation(n_cluster=G, data=image_vector[:, :])
@@ -68,35 +67,7 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         count = 0
         Common_mul = 1
         Common_add = 0
-        tmp1 = torch.zeros(())
-        for val in range(G):
-            # this creates all a list of all the indices where our label is valid 
-            inx = np.argwhere(Data.labels_ == val)
-            if len(inx) > 0:
-                tmp = torch.zeros((input.shape[0], len(inx), input.shape[2], input.shape[3]))
-            for idx, idxx in enumerate(inx):
-                if len(inx) == 0:
-                    pass
-                else:
-                    # This is line of code is effectively saying fill into our temp channel equal to
-                    # the original index from input for all the matching indices. so we have temp has 
-                    # number of channels assigned to that cluster
-                    tmp[:, idx, :, :] = input[:, idxx[0], :, :]
-                    # now we have the correct grouping so we choose to normalize
-            # STAT is the function which I think has a bug...
-            out_final_tmp = (Stat_torch(tmp)).float().to('cuda')
-            for idx, idxx in enumerate(inx):
-                if (len(inx) == 0):
-                    pass
-                else:
-                    # here we assign that the the original index of out_final is equal to the temp
-                    # index it was given in the normalized group
-                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]
-        # we reshape it to the original size
-        # this is probably fine since code doesnt error...
-        # although double check this last line
-        return out_final.view(b, c, *input.size()[2:])
-
+        return input
     return _instance_norm(input, group, running_mean=running_mean,
                           running_var=running_var, weight=weight, bias=bias,
                           use_input_stats=use_input_stats, momentum=momentum,
