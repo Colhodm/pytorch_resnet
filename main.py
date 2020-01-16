@@ -257,6 +257,8 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
 
 def main():
     # parse command line arguments
+    print(torch.get_num_threads())
+    torch.set_num_threads(8) 
     config = parse_args()
     logger.info(json.dumps(config, indent=2))
 
@@ -305,17 +307,9 @@ def main():
         optimizer,
         milestones=optim_config['milestones'],
         gamma=optim_config['lr_decay'])
-    temp =1
-    #if os.path.exists(os.path.join(outdir, 'model_state.pth')):
-    #    checkpoint = torch.load(os.path.join(outdir, 'model_state.pth'))
-    #    model.load_state_dict(checkpoint['state_dict'])
-    #    optimizer.load_state_dict(checkpoint['optimizer'])
-    #    epoch = checkpoint['epoch']
-    #    temp = epoch
-    #else:
-    #    test(0, model, criterion, test_loader, run_config, writer)
+    test(0, model, criterion, test_loader, run_config, writer)
 
-    for epoch in range(temp, optim_config['epochs'] + 1):
+    for epoch in range(0, optim_config['epochs'] + 1):
         scheduler.step()
 
         train(epoch, model, optimizer, criterion, train_loader, run_config,

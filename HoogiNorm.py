@@ -11,8 +11,6 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-
-
 def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
                use_input_stats=True, momentum=0.1, eps=1e-5):
     r"""Applies Group Normalization for channels in the same group in each data sample in a
@@ -40,8 +38,11 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
             running_var = running_var_orig.repeat(b)
         eps = 1e-5
         G = group
-        out_final = input
         x_np = input
+        #if not input.is_cuda:
+        #    input = input.cuda()
+        gpu_copy = input
+        out_final =gpu_copy 
         # NO PYTORCH EQUIVALENT YET WE CAN USEhttps://discuss.pytorch.org/t/equivalent-to-numpys-nan-to-num/52448
         #x_np = np.nan_to_num(x_np)
         # At this point we have just stored our input on CPU with Numpy
@@ -49,13 +50,13 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         N = Nabs
         # N refers to the __? What the batch size?
         # res_x is the original shape of our input
-        res_x = torch.zeros((N, C, H, W)).cuda()
+        res_x = torch.zeros((N, C, H, W))
         # this is a looser form where we are just by channel dimensions
-        x_np_new = torch.zeros((C,2)).cuda()
+        x_np_new = torch.zeros((C,2))
         # we loop through the channels
         #TODO DOUBLE CHECK THIS IS RIGHT!!!
-        temp = torch.reshape(x_np, (C, N * H * W)).cuda()
-        img = torch.zeros((C, 2)).cuda()
+        temp = torch.reshape(x_np, (C, N * H * W))
+        img = torch.zeros((C, 2))
         img[:, 0], img[:, 1]= torch.std_mean(temp, dim=1)
         # TODO we could use that other function to replace
         #x_np_new = np.nan_to_num(x_np_new,posinf=0,neginf=0)
@@ -64,26 +65,27 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         count = 0
         Common_mul = 1
         Common_add = 0
-        tmp1 = torch.zeros(())
         for val in range(G):
             # The problem is arising when we assign everybody to the same group
             inx = torch.nonzero((Data == val))
-            if inx.size()[0] == 0:
-            print(inx,inx.size()[0])
             if inx.size()[0] >  0:
-                tmp = torch.zeros((input.shape[0], len(inx), input.shape[2], input.shape[3])).cuda()
-            for idx, idxx in enumerate(inx):
-                if inx.size()[0] == 0:
-                    pass
-                else:
-                    tmp[:, idx, :, :] = input[:, idxx[0], :, :]
+                tmp = torch.zeros((input.shape[0], inx.size()[0], input.shape[2], input.shape[3]))
+            else:
+                continue
+            flat_inx = torch.flatten(inx)
+            if gpu_copy.is_cuda:
+                temp_flat_inx = flat_inx.cuda()
+                tmp = tmp.cuda()
+            else:
+                temp_flat_inx = flat_inx
+            tmp[:, :, :, :] = torch.index_select(gpu_copy,1,temp_flat_inx)
             out_final_tmp = Stat_torch(tmp)
-            for idx, idxx in enumerate(inx):
-                if inx.size([0]) == 0:
-                    pass
-                else:
-                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]
-        assert 1==0
+            out_final_tmp[out_final_tmp != out_final_tmp] = 0
+            if out_final.is_cuda:
+                out_temp = out_final_tmp.cuda()
+            else:
+                out_temp = out_final_tmp
+            out_final[:, :, :, :] = out_final.index_copy_(1, temp_flat_inx, out_temp)
         return out_final.view(b, c, *input.size()[2:])
     return _instance_norm(input, group, running_mean=running_mean,
                           running_var=running_var, weight=weight, bias=bias,
@@ -138,15 +140,5 @@ def Stat(IN):
 
 # Current Method of Normalization
 def Stat_torch(IN):
-    tmp = torch.zeros((IN.shape[0])).cuda()
-    tmp2 = 0
-    eps = 1e-5
-    sigma = torch.zeros((IN.shape[0], 1)).cuda()
-    out = IN
-    res = torch.zeros((IN.shape[0], 2, IN.shape[2], IN.shape[3])).cuda()
-    res[:, 0, :, :], res[:, 1, :, :] = torch.std_mean(IN + eps, dim=1)
-    for i in range(IN.shape[0]):
-        for j in range(IN.shape[1]):
-            out[i, j, :, :] = (1 / res[i, 0]) * (IN[i, j, :, :] - res[i, 1])
-    return out
+    return  torch.nn.functional.normalize(IN,dim=1)
 
