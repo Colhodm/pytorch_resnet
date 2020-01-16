@@ -40,29 +40,26 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
             running_var = running_var_orig.repeat(b)
         eps = 1e-5
         G = group
-        input_mod = input
         out_final = input
-        input_cpu = input.to('cpu')
-        x = input_cpu.to('cpu')
-        x_np = x.detach().numpy()
-        x_np = np.nan_to_num(x_np)
+        x_np = input
+        # NO PYTORCH EQUIVALENT YET WE CAN USEhttps://discuss.pytorch.org/t/equivalent-to-numpys-nan-to-num/52448
+        #x_np = np.nan_to_num(x_np)
         # At this point we have just stored our input on CPU with Numpy
-        Nabs, C, H, W = x_np.shape
+        Nabs, C, H, W = x_np.size()
         N = Nabs
         # N refers to the __? What the batch size?
         # res_x is the original shape of our input
-        res_x = np.zeros((N, C, H, W))
+        res_x = torch.zeros((N, C, H, W))
         # this is a looser form where we are just by channel dimensions
-        x_np_new = np.zeros((C,2))
+        x_np_new = torch.zeros((C,2))
         # we loop through the channels
         #TODO DOUBLE CHECK THIS IS RIGHT!!!
-        temp = np.reshape(x_np[:, :, :, :], (C, N * H * W))
-        mean,std = np.reshape(np.mean(temp,axis=(1)),(C,1)) ,np.reshape(np.std(temp,axis=(1)),(C,1))
-        # we might need hstack
-        x_np_new[:,:] = np.hstack((std, mean))
-        x_np_new = np.nan_to_num(x_np_new,posinf=0,neginf=0)
-        image_vector = np.asarray(x_np_new)
-        Data = data_preparation(n_cluster=G, data=image_vector[:, :])
+        temp = torch.reshape(x_np, (C, N * H * W))
+        img = torch.zeros((C, 2))
+        img[:, 0], img[:, 1]= torch.std_mean(temp, dim=1)
+        # TODO we could use that other function to replace
+        #x_np_new = np.nan_to_num(x_np_new,posinf=0,neginf=0)
+        Data = data_preparation(n_cluster=G, data=img[:, :])
         # Up to here we are all correct, as long as we are clustering in the right basis
         count = 0
         Common_mul = 1
