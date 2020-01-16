@@ -53,15 +53,14 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         # res_x is the original shape of our input
         res_x = np.zeros((N, C, H, W))
         # this is a looser form where we are just by channel dimensions
-        x_np_new = np.zeros((C,2))
+        x_np_new = np.zeros((C, N * H * W))
         # we loop through the channels
         for i in range(C):
             # we are converting the raw input data such that there are channel rows of large N*H*W blocks
-            # why
-           temp = np.reshape(x_np[:, i, :, :], (1, N * H * W))
-           x_np_new[i, :] = [temp.mean(),temp.std()]        # 60 by 10000 trying to cluster in this basis
+            # why?
+            x_np_new[i, :] = np.reshape(x_np[:, i, :, :], (1, N * H * W))
+        # 60 by 10000 trying to cluster in this basis
         # we create a copy of our reformatted data
-        x_np_new = np.nan_to_num(x_np,posinf=0,neginf=0)
         image_vector = np.asarray(x_np_new)
         Data = data_preparation(n_cluster=G, data=image_vector[:, :])
         # Up to here we are all correct, as long as we are clustering in the right basis
@@ -150,7 +149,6 @@ def Stat(IN):
 
 # Current Method of Normalization
 def Stat_torch(IN):
-    print('I AM WORKING UP TO HERE')
     tmp = torch.zeros((IN.shape[0]))
     tmp2 = 0
     eps = 1e-5
