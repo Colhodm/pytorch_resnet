@@ -49,13 +49,13 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         N = Nabs
         # N refers to the __? What the batch size?
         # res_x is the original shape of our input
-        res_x = torch.zeros((N, C, H, W))
+        res_x = torch.zeros((N, C, H, W)).cuda()
         # this is a looser form where we are just by channel dimensions
-        x_np_new = torch.zeros((C,2))
+        x_np_new = torch.zeros((C,2)).cuda()
         # we loop through the channels
         #TODO DOUBLE CHECK THIS IS RIGHT!!!
-        temp = torch.reshape(x_np, (C, N * H * W))
-        img = torch.zeros((C, 2))
+        temp = torch.reshape(x_np, (C, N * H * W)).cuda()
+        img = torch.zeros((C, 2)).cuda()
         img[:, 0], img[:, 1]= torch.std_mean(temp, dim=1)
         # TODO we could use that other function to replace
         #x_np_new = np.nan_to_num(x_np_new,posinf=0,neginf=0)
@@ -64,7 +64,27 @@ def group_norm(input, group, running_mean, running_var, weight=None, bias=None,
         count = 0
         Common_mul = 1
         Common_add = 0
-        return input
+        tmp1 = torch.zeros(())
+        for val in range(G):
+            # The problem is arising when we assign everybody to the same group
+            inx = torch.nonzero((Data == val))
+            if inx.size()[0] == 0:
+            print(inx,inx.size()[0])
+            if inx.size()[0] >  0:
+                tmp = torch.zeros((input.shape[0], len(inx), input.shape[2], input.shape[3])).cuda()
+            for idx, idxx in enumerate(inx):
+                if inx.size()[0] == 0:
+                    pass
+                else:
+                    tmp[:, idx, :, :] = input[:, idxx[0], :, :]
+            out_final_tmp = Stat_torch(tmp)
+            for idx, idxx in enumerate(inx):
+                if inx.size([0]) == 0:
+                    pass
+                else:
+                    out_final[:, idxx[0], :, :] = out_final_tmp[:, idx, :, :]
+        assert 1==0
+        return out_final.view(b, c, *input.size()[2:])
     return _instance_norm(input, group, running_mean=running_mean,
                           running_var=running_var, weight=weight, bias=bias,
                           use_input_stats=use_input_stats, momentum=momentum,
@@ -118,12 +138,12 @@ def Stat(IN):
 
 # Current Method of Normalization
 def Stat_torch(IN):
-    tmp = torch.zeros((IN.shape[0]))
+    tmp = torch.zeros((IN.shape[0])).cuda()
     tmp2 = 0
     eps = 1e-5
-    sigma = torch.zeros((IN.shape[0], 1))
+    sigma = torch.zeros((IN.shape[0], 1)).cuda()
     out = IN
-    res = torch.zeros((IN.shape[0], 2, IN.shape[2], IN.shape[3]))
+    res = torch.zeros((IN.shape[0], 2, IN.shape[2], IN.shape[3])).cuda()
     res[:, 0, :, :], res[:, 1, :, :] = torch.std_mean(IN + eps, dim=1)
     for i in range(IN.shape[0]):
         for j in range(IN.shape[1]):
