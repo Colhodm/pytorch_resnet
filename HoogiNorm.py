@@ -110,35 +110,8 @@ class HoogiNorm(_BatchNorm):
         return group_norm(
             input, self.num_groups, self.running_mean, self.running_var, self.weight, self.bias,
             self.training or not self.track_running_stats, self.momentum, self.eps)
-
-# Deprecated Method of Normalization
-def Stat(IN):
-    tmp = np.zeros((IN.shape[0]))
-    tmp2 = 0
-    eps = 1e-5
-    sigma = np.zeros((IN.shape[0], 1))
-    out = IN
-    # print('IN is:')
-    # print(IN.shape)
-    '''for i in range(IN.shape[1]):
-        tmp += np.sum(IN[:,i,:,:])'''
-    for i in range(IN.shape[0]):
-        # for j in range(IN.shape[1]):
-        tmp[i] += np.sum(IN[i, :, :, :])
-
-    # tmp = np.sum(IN, where=[False, True, True, True])
-    mu = (1 / (IN.shape[1] * IN.shape[2] * IN.shape[3])) * tmp
-    for i in range(IN.shape[0]):
-        sigma[i] = np.sqrt(
-            (1 / (IN.shape[1] * IN.shape[2] * IN.shape[3])) * (np.sum((IN[i, :, :, :] - mu[i]) ** 2) + eps))
-    # sigma = np.sqrt((1 / (IN.shape[0] * IN.shape[2] * IN.shape[3])) * tmp2)
-    for i in range(IN.shape[0]):
-        for j in range(IN.shape[1]):
-            out[i, j, :, :] = (1 / sigma[i]) * (IN[i, j, :, :] - mu[i])
-    print(out)
-    return out
-
-# Current Method of Normalization
 def Stat_torch(IN):
-    return  torch.nn.functional.normalize(IN,dim=1)
+    t = torch.zeros((IN.shape[0], IN.shape[1], IN.shape[2], IN.shape[3]))
+    my_temp = torch.nn.functional.normalize(IN.view(IN.shape[0],IN.shape[1]*IN.shape[2]*IN.shape[3]),dim=1)
+    return my_temp.view(*t.size())
 
